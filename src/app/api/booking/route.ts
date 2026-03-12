@@ -34,7 +34,7 @@ export async function POST(req: Request) {
 
     // 2. Insert into Supabase
     const { data: bookingData, error: dbError } = await supabase
-      .from("booking")
+      .from("bookings")
       .insert([
   {
     name,
