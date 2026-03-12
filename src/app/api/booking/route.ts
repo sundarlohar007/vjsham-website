@@ -16,6 +16,7 @@ export async function POST(req: Request) {
     const {
       name,
       email,
+      phone,
       event_type,
       event_date,
       event_location,
