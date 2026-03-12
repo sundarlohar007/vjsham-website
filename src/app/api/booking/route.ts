@@ -34,19 +34,18 @@ export async function POST(req: Request) {
 
     // 2. Insert into Supabase
     const { data: bookingData, error: dbError } = await supabase
-      .from("booking_requests")
+      .from("booking")
       .insert([
-        {
-          name,
-          email,
-          event_type,
-          event_date,
-          event_location,
-          venue_size,
-          budget,
-          message,
-        },
-      ])
+  {
+    name,
+    email,
+    event_type,
+    event_date,
+    location: event_location,
+    budget,
+    details: message,
+  },
+])
       .select()
       .single();
 
