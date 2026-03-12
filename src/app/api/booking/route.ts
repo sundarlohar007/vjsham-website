@@ -33,29 +33,29 @@ export async function POST(req: Request) {
     }
 
     // 2. Insert into Supabase
-    const { data: bookingData, error: dbError } = await supabase
-      .from("bookings")
-      .insert([
-  {
-    name,
-    email,
-    event_type,
-    event_date,
-    location: event_location,
-    budget,
-    details: message,
-  },
-])
-      .select()
-      .single();
+const { data: bookingData, error: dbError } = await supabase
+  .from("bookings")
+  .insert([
+    {
+      name,
+      email,
+      event_type,
+      event_date,
+      location: event_location,
+      budget,
+      details: message,
+    },
+  ])
+  .select()
+  .single();
 
-    if (dbError) {
-      console.error("Supabase Insert Error:", dbError);
-      return NextResponse.json(
-        { error: "Failed to save booking request to database." },
-        { status: 500 }
-      );
-    }
+if (dbError) {
+  console.error("Supabase Insert Error:", dbError);
+  return NextResponse.json(
+    { error: "Failed to save booking request to database." },
+    { status: 500 }
+  );
+}
 
     // 3. Send Notification Email to Owner
     // (Only attempt if Resend is configured to avoid crashing local dev if secrets are missing)
