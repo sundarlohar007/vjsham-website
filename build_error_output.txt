@@ -1,0 +1,25 @@
+
+> vj-sham-app@0.1.0 build
+> next build
+
+Γû▓ Next.js 16.1.6 (Turbopack)
+
+  Creating an optimized production build ...
+Γ£ô Compiled successfully in 3.2s
+  Running TypeScript ...
+  Collecting page data using 15 workers ...
+Supabase environment variables missing. Booking submissions will fail in production.
+Error: Missing API key. Pass it to the constructor `new Resend("re_123")`
+    at new <anonymous> (C:\AntiGravity Projects\VJ SHAM\vj-sham-app\.next\server\chunks\[root-of-the-server]__7ae018cf._.js:42:28288)
+    at module evaluation (C:\AntiGravity Projects\VJ SHAM\vj-sham-app\.next\server\chunks\[root-of-the-server]__7ae018cf._.js:42:27827)
+    at instantiateModule (C:\AntiGravity Projects\VJ SHAM\vj-sham-app\.next\server\chunks\[turbopack]_runtime.js:740:9)
+    at instantiateRuntimeModule (C:\AntiGravity Projects\VJ SHAM\vj-sham-app\.next\server\chunks\[turbopack]_runtime.js:768:12)
+    at getOrInstantiateRuntimeModule (C:\AntiGravity Projects\VJ SHAM\vj-sham-app\.next\server\chunks\[turbopack]_runtime.js:781:12)
+    at Object.m (C:\AntiGravity Projects\VJ SHAM\vj-sham-app\.next\server\chunks\[turbopack]_runtime.js:790:18)
+    at Object.<anonymous> (C:\AntiGravity Projects\VJ SHAM\vj-sham-app\.next\server\app\api\booking\route.js:6:3)
+
+> Build error occurred
+Error: Failed to collect page data for /api/booking
+    at ignore-listed frames {
+  type: 'Error'
+}
