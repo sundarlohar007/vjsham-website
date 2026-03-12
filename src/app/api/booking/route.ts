@@ -37,14 +37,15 @@ const { data: bookingData, error: dbError } = await supabase
   .from("bookings")
   .insert([
     {
-      name,
-      email,
-      event_type,
-      event_date,
-      location: event_location,
-      budget,
-      details: message,
-    },
+  name,
+  email,
+  event_type,
+  phone,
+  event_date,
+  location: event_location,
+  budget,
+  details: message,
+},
   ])
   .select()
   .single();
