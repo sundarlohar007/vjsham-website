@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Navigation from '@/components/layout/Navigation';
 import Footer from '@/components/layout/Footer';
+import { createClient } from '@supabase/supabase-js';
 
 const eventTypes = [
   "Club Night",
@@ -26,6 +27,14 @@ const budgets = [
 ];
 
 export default function BookPage() {
+  const supabase = useMemo(() => {
+    if (typeof window === 'undefined') return null;
+    return createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    );
+  }, []);
+  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -38,6 +47,7 @@ export default function BookPage() {
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData((prev) => ({
@@ -49,13 +59,38 @@ export default function BookPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setSubmitStatus('idle');
     
-    // Simulate form submission
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    if (!supabase) {
+      setSubmitStatus('error');
+      setIsSubmitting(false);
+      return;
+    }
     
-    setIsSubmitting(false);
-    alert('Thank you for your inquiry! I will get back to you soon.');
+    try {
+      const { error } = await supabase.from('bookings').insert([{
+        name: formData.name,
+        email: formData.email,
+        event_type: formData.eventType,
+        event_date: formData.date || null,
+        venue: formData.venue || null,
+        duration: formData.duration || null,
+        budget: formData.budget || null,
+        description: formData.description || null,
+      }]);
+      
+      if (error) throw error;
+      
+      setSubmitStatus('success');
+      setFormData({ name: '', email: '', eventType: '', date: '', venue: '', duration: '', budget: '', description: '' });
+    } catch (error) {
+      console.error('Error:', error);
+      setSubmitStatus('error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
   
   return (
     <main className="min-h-screen bg-background">
@@ -211,6 +246,18 @@ export default function BookPage() {
             </div>
             
             {/* Submit Button */}
+            {submitStatus === 'success' && (
+              <div className="p-4 bg-green-500/20 border border-green-500 rounded-xl text-green-400 text-center">
+                Thank you! Your booking inquiry has been submitted. I'll get back to you soon!
+              </div>
+            )}
+
+            {submitStatus === 'error' && (
+              <div className="p-4 bg-red-500/20 border border-red-500 rounded-xl text-red-400 text-center">
+                Something went wrong. Please try again or contact me directly.
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={isSubmitting}
