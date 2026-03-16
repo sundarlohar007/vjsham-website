@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import Navigation from '@/components/layout/Navigation';
 import Footer from '@/components/layout/Footer';
 import { createClient } from '@supabase/supabase-js';
@@ -48,6 +48,21 @@ export default function BookPage() {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [turnstileToken, setTurnstileToken] = useState<string>('');
+  const turnstileRef = useRef<HTMLDivElement>(null);
+  
+  // Load Cloudflare Turnstile script
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+    script.async = true;
+    script.setAttribute('data-sitekey', process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || '');
+    document.body.appendChild(script);
+    
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData((prev) => ({
@@ -60,6 +75,14 @@ export default function BookPage() {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitStatus('idle');
+    
+    // Check Turnstile token
+    const token = (window as unknown as { turnstile?: { getResponse: () => string } }).turnstile?.getResponse();
+    if (!token) {
+      setSubmitStatus('error');
+      setIsSubmitting(false);
+      return;
+    }
     
     if (!supabase) {
       setSubmitStatus('error');
@@ -77,12 +100,15 @@ export default function BookPage() {
         duration: formData.duration || null,
         budget: formData.budget || null,
         description: formData.description || null,
+        turnstile_token: token,
       }]);
       
       if (error) throw error;
       
       setSubmitStatus('success');
       setFormData({ name: '', email: '', eventType: '', date: '', venue: '', duration: '', budget: '', description: '' });
+      // Reset Turnstile
+      (window as unknown as { turnstile?: { reset: () => void } }).turnstile?.reset();
     } catch (error) {
       console.error('Error:', error);
       setSubmitStatus('error');
@@ -242,6 +268,15 @@ export default function BookPage() {
                 rows={4}
                 className="w-full px-3 py-3 sm:px-4 sm:py-3 bg-surface border border-surface-elevated rounded-xl text-foreground placeholder-foreground-muted focus:outline-none focus:border-accent-primary transition-colors resize-none"
                 placeholder="Tell me about your event, the vibe you're looking for, any specific visual requirements..."
+              />
+            </div>
+            
+            {/* Cloudflare Turnstile */}
+            <div className="flex justify-center mb-4">
+              <div 
+                className="cf-turnstile" 
+                data-sitekey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || ''}
+                data-theme="dark"
               />
             </div>
             
