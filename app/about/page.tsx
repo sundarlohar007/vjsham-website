@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Navigation from '@/components/layout/Navigation';
 import Footer from '@/components/layout/Footer';
 
@@ -12,9 +13,15 @@ export default function AboutPage() {
             
             {/* Left Column - Image */}
             <div>
-              <div className="aspect-[4/5] rounded-2xl bg-gradient-to-br from-accent-primary/20 to-accent-secondary/20 border border-surface-elevated overflow-hidden">
-                <div className="w-full h-full flex items-center justify-center">
-                  <span className="font-mono text-foreground-muted">[ Your Photo Here ]</span>
+              <div className="aspect-[4/5] rounded-2xl border border-surface-elevated overflow-hidden">
+                <div className="w-full h-full relative">
+                  <Image 
+                    src="https://res.cloudinary.com/del1zod3h/image/upload/v1773657094/profile_jhtphv.jpg"
+                    alt="VJ SHAM"
+                    fill
+                    className="object-cover"
+                    priority
+                  />
                 </div>
               </div>
             </div>
@@ -28,36 +35,37 @@ export default function AboutPage() {
               
               <div className="space-y-6 text-foreground-muted font-sans">
                 <p className="text-lg leading-relaxed">
-                  I'm VJ SHAM, a professional Visual Jockey based in [Your City]. 
-                  With over [X] years of experience in live visual performance, 
-                  I transform events into immersive audiovisual experiences.
+                  I'm VJ SHAM, a professional Visual Jockey based in Pune, India. 
+                  With over 7+ years of experience in live visual performance, 
+                  I specialize in transforming events into immersive audiovisual experiences 
+                  through synchronized visuals, creative storytelling, and real-time visual manipulation.
                 </p>
                 
                 <p>
-                  My journey began in underground clubs, where I discovered 
-                  the power of synchronized visuals to elevate music and create 
-                  unforgettable moments on the dance floor.
+                  My journey started in underground club environments, where I first 
+                  explored how synchronized visuals could enhance music and intensify 
+                  the atmosphere on the dance floor, turning ordinary sets into immersive experiences.
                 </p>
                 
                 <p>
-                  Today, I work with clubs, festivals, corporate events, and 
-                  private clients worldwide, bringing creative visions to life 
-                  through cutting-edge visual technology.
+                  Today, I collaborate with Festivals, corporate events, and private 
+                  clients around the world, translating creative concepts into immersive 
+                  visual experiences using modern VJ techniques and advanced visual technology.
                 </p>
               </div>
               
               {/* Stats */}
               <div className="grid grid-cols-3 gap-2 sm:gap-6 mt-8">
                 <div className="text-center p-3 sm:p-4 bg-surface rounded-xl border border-surface-elevated">
-                  <span className="font-mono text-2xl sm:text-3xl font-bold text-accent-primary">5+</span>
+                  <span className="font-mono text-2xl sm:text-3xl font-bold text-accent-primary">7+</span>
                   <p className="font-mono text-xs text-foreground-muted mt-1">Years Experience</p>
                 </div>
                 <div className="text-center p-3 sm:p-4 bg-surface rounded-xl border border-surface-elevated">
-                  <span className="font-mono text-2xl sm:text-3xl font-bold text-accent-secondary">200+</span>
+                  <span className="font-mono text-2xl sm:text-3xl font-bold text-accent-secondary">750+</span>
                   <p className="font-mono text-xs text-foreground-muted mt-1">Events</p>
                 </div>
                 <div className="text-center p-3 sm:p-4 bg-surface rounded-xl border border-surface-elevated">
-                  <span className="font-mono text-2xl sm:text-3xl font-bold text-accent-highlight">50+</span>
+                  <span className="font-mono text-2xl sm:text-3xl font-bold text-accent-highlight">88+</span>
                   <p className="font-mono text-xs text-foreground-muted mt-1">Venues</p>
                 </div>
               </div>
@@ -68,13 +76,11 @@ export default function AboutPage() {
                 <div className="flex flex-wrap gap-2">
                   {[
                     "Resolume Arena",
-                    "Modul8",
+                    "Adobe After Effects",
+                    "Blender 3D",
+                    "Live Visuals",
+                    "Visual Concepts",
                     "TouchDesigner",
-                    "VDMX",
-                    "After Effects",
-                    "Blender",
-                    "3D Mapping",
-                    "Live Mixing",
                   ].map((skill) => (
                     <span
                       key={skill}
