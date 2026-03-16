@@ -1,7 +1,16 @@
-import Visualizer from '@/components/visualizer/Visualizer';
+'use client';
+
+import dynamic from 'next/dynamic';
 import ControlPanel from '@/components/controller/ControlPanel';
 import Navigation from '@/components/layout/Navigation';
 import Footer from '@/components/layout/Footer';
+
+const Visualizer = dynamic(() => import('@/components/visualizer/Visualizer'), {
+  ssr: false,
+  loading: () => (
+    <div className="absolute inset-0 bg-background" />
+  ),
+});
 
 export default function Home() {
   return (

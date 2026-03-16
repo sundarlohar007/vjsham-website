@@ -59,6 +59,9 @@ export default function Button({
   return (
     <div className="flex flex-col items-center gap-1 md:gap-2">
       <button
+        role="button"
+        aria-label={label}
+        aria-pressed={active || isPressed}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
