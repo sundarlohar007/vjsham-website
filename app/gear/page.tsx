@@ -1,37 +1,24 @@
 import Navigation from '@/components/layout/Navigation';
 import Footer from '@/components/layout/Footer';
 
-const equipment = {
+const equipment: { controllers: { name: string; category: string }[]; software: { name: string; category: string }[]; hardware: { name: string; category: string }[]; accessories: { name: string; category: string }[] } = {
   controllers: [
-    { name: "Pioneer DJM-900NXS2", category: "Mixer" },
-    { name: "Pioneer CDJ-3000", category: "Media Player" },
-    { name: "Novation Launchpad Pro", category: "Pad Controller" },
-    { name: "Akai APC40 mkII", category: "Pad Controller" },
-    { name: "Native Instruments Maschine", category: "Groove Controller" },
+    { name: "Akai Professional APC Mini Mk 2", category: "Resolume Visual Controller" },
   ],
   software: [
-    { name: "Resolume Arena 7", category: "VJ Software" },
-    { name: "Modul8", category: "VJ Software" },
-    { name: "TouchDesigner", category: "Visual Programming" },
-    { name: "VDMX", category: "VJ Software" },
-    { name: "After Effects", category: "Motion Graphics" },
-    { name: "Blender", category: "3D Software" },
-    { name: "Cinema 4D", category: "3D Software" },
+    { name: "Resolume Arena", category: "Visual Control" },
+    { name: "Chaser", category: "Visual Effects" },
+    { name: "Stageflow", category: "Visual Effects" },
+    { name: "AfterEffects", category: "Motion Graphics" },
+    { name: "Blender 3D", category: "3D Visual Effects" },
   ],
   hardware: [
-    { name: "MacBook Pro M3 Max", category: "Laptop" },
-    { name: "Mac Studio", category: "Computer" },
-    { name: "Blackmagic ATEM Mini", category: "Video Switcher" },
-    { name: "Roland V-1HD+", category: "Video Switcher" },
-    { name: "Epson EB-L1755U", category: "Projector" },
-    { name: "Panasonic PT-RZ120", category: "Projector" },
+    { name: "Mini DP to HDMI Converter", category: "Converter" },
+    { name: "BlackMagic 4K SDI Converter", category: "Video Switch" },
+    { name: "MSI Raider GE68 HX", category: "Computer" },
   ],
   accessories: [
-    { name: "SanDisk Extreme Pro 1TB", category: "Storage" },
-    { name: "Thunderbolt 3 Cables", category: "Cables" },
-    { name: "HDMI 2.1 Cables", category: "Cables" },
-    { name: "Portable SSD 2TB", category: "Storage" },
-    { name: "iPad Pro 12.9", category: "Backup Controller" },
+    { name: "More coming soon", category: "" },
   ],
 };
 
