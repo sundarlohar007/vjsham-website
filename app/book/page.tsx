@@ -20,15 +20,6 @@ const eventTypes = [
   "Other",
 ];
 
-const budgets = [
-  "Under $500",
-  "$500 - $1,000",
-  "$1,000 - $2,500",
-  "$2,500 - $5,000",
-  "$5,000 - $10,000",
-  "$10,000+",
-];
-
 export default function BookPage() {
   const [supabase, setSupabase] = useState<any>(null);
   const [supabaseLoading, setSupabaseLoading] = useState(false);
@@ -40,7 +31,6 @@ export default function BookPage() {
     date: '',
     venue: '',
     duration: '',
-    budget: '',
     description: '',
   });
   
@@ -115,7 +105,6 @@ export default function BookPage() {
         event_date: formData.date || null,
         venue: formData.venue || null,
         duration: formData.duration || null,
-        budget: formData.budget || null,
         description: formData.description || null,
         turnstile_token: token,
       }]);
@@ -123,7 +112,7 @@ export default function BookPage() {
       if (error) throw error;
       
       setSubmitStatus('success');
-      setFormData({ name: '', email: '', eventType: '', date: '', venue: '', duration: '', budget: '', description: '' });
+      setFormData({ name: '', email: '', eventType: '', date: '', venue: '', duration: '', description: '' });
       // Reset Turnstile
       (window as unknown as { turnstile?: { reset: () => void } }).turnstile?.reset();
     } catch (error) {
@@ -245,31 +234,12 @@ export default function BookPage() {
                   className="w-full px-3 py-3 sm:px-4 sm:py-3 bg-surface border border-surface-elevated rounded-xl text-foreground focus:outline-none focus:border-accent-primary transition-colors"
                 >
                   <option value="">Select duration</option>
-                  <option value="2 hours">2 hours</option>
-                  <option value="3 hours">3 hours</option>
-                  <option value="4 hours">4 hours</option>
-                  <option value="5+ hours">5+ hours</option>
-                  <option value="Full night">Full night</option>
+                  <option value="1 day">1 day</option>
+                  <option value="2 days">2 days</option>
+                  <option value="3 days">3 days</option>
+                  <option value="4+ days">4+ days</option>
                 </select>
               </div>
-            </div>
-            
-            {/* Budget */}
-            <div className="mb-2">
-              <label className="block font-mono text-sm text-foreground-muted mb-2">
-                Budget Range
-              </label>
-              <select
-                name="budget"
-                value={formData.budget}
-                onChange={handleChange}
-                className="w-full px-4 py-3 bg-surface border border-surface-elevated rounded-xl text-foreground focus:outline-none focus:border-accent-primary transition-colors"
-              >
-                <option value="">Select budget range</option>
-                {budgets.map((budget) => (
-                  <option key={budget} value={budget}>{budget}</option>
-                ))}
-              </select>
             </div>
             
             {/* Description */}
