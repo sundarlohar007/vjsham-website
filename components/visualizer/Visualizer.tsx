@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useMemo, useEffect, useState } from 'react';
+import { useRef, useMemo, useEffect, useState, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { EffectComposer, Bloom, Noise, ChromaticAberration } from '@react-three/postprocessing';
 import { BlendFunction } from 'postprocessing';
@@ -165,10 +165,9 @@ function Particles({ count }: { count: number }) {
   const meshRef = useRef<THREE.Points>(null);
   const { hue, density, zoom, speed, intensity } = useVisualizerStore();
   
-  const [positions, colors, sizes] = useMemo(() => {
+  const [positions, colors] = useMemo(() => {
     const pos = new Float32Array(count * 3);
     const col = new Float32Array(count * 3);
-    const siz = new Float32Array(count);
     
     for (let i = 0; i < count; i++) {
       const theta = Math.random() * Math.PI * 2;
@@ -184,11 +183,9 @@ function Particles({ count }: { count: number }) {
       col[i * 3] = hueColor.r;
       col[i * 3 + 1] = hueColor.g;
       col[i * 3 + 2] = hueColor.b;
-      
-      siz[i] = Math.random() * 0.05 + 0.01;
     }
     
-    return [pos, col, siz];
+    return [pos, col];
   }, [count, hue, zoom]);
   
   useFrame((state) => {
@@ -215,14 +212,8 @@ function Particles({ count }: { count: number }) {
   return (
     <points ref={meshRef}>
       <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          args={[positions, 3]}
-        />
-        <bufferAttribute
-          attach="attributes-color"
-          args={[colors, 3]}
-        />
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+        <bufferAttribute attach="attributes-color" args={[colors, 3]} />
       </bufferGeometry>
       <pointsMaterial
         size={0.02}
@@ -267,14 +258,12 @@ function FluidPlane() {
       material.uniforms.uZoom.value = 0.5;
       material.uniforms.uDensity.value = 0.5;
       material.uniforms.uFxMix.value = fxMix;
-      material.uniforms.uGlitch.value = false;
-      material.uniforms.uFlash.value = false;
     }
   });
   
   return (
     <mesh ref={meshRef} scale={5}>
-      <planeGeometry args={[2, 2, 64, 64]} />
+      <planeGeometry args={[2, 2, 32, 32]} />
       <shaderMaterial
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
@@ -294,26 +283,34 @@ function Scene({ isMobile }: { isMobile: boolean }) {
       <color attach="background" args={['#0D0D0D']} />
       <ambientLight intensity={0.5} />
       <FluidPlane />
-      <Particles count={isMobile ? 500 : 2000} />
+      <Particles count={isMobile ? 300 : 1500} />
       
       {!isMobile && (
         <EffectComposer>
-          <Bloom
-            intensity={intensity * 0.5}
-            luminanceThreshold={0.2}
-            luminanceSmoothing={0.9}
-          />
+          <Bloom intensity={intensity * 0.5} luminanceThreshold={0.2} luminanceSmoothing={0.9} />
           <Noise opacity={0.1} blendFunction={BlendFunction.OVERLAY} />
-          <ChromaticAberration
-            offset={new THREE.Vector2(0.002 * intensity, 0.002 * intensity)}
-          />
+          <ChromaticAberration offset={new THREE.Vector2(0.002 * intensity, 0.002 * intensity)} />
         </EffectComposer>
       )}
     </>
   );
 }
 
+function VisualizerContent({ isMobile }: { isMobile: boolean }) {
+  return (
+    <Canvas
+      camera={{ position: [0, 0, 2], fov: 75 }}
+      gl={{ antialias: !isMobile, alpha: false }}
+      dpr={isMobile ? 1 : [1, 1.5]}
+      performance={{ min: 0.5 }}
+    >
+      <Scene isMobile={isMobile} />
+    </Canvas>
+  );
+}
+
 export default function Visualizer() {
+  const [isReady, setIsReady] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   
   useEffect(() => {
@@ -327,16 +324,29 @@ export default function Visualizer() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
   
+  useEffect(() => {
+    const handleLoad = () => {
+      setIsReady(true);
+    };
+    
+    if (document.readyState === 'complete') {
+      setIsReady(true);
+    } else {
+      window.addEventListener('load', handleLoad);
+    }
+    
+    return () => window.removeEventListener('load', handleLoad);
+  }, []);
+  
   return (
     <div className="fixed inset-0 w-full h-full -z-10">
-      <Canvas
-        camera={{ position: [0, 0, 2], fov: 75 }}
-        gl={{ antialias: !isMobile, alpha: false }}
-        dpr={isMobile ? 1 : [1, 2]}
-        performance={{ min: 0.5 }}
-      >
-        <Scene isMobile={isMobile} />
-      </Canvas>
+      {isReady ? (
+        <Suspense fallback={<div className="absolute inset-0 bg-[#0D0D0D]" />}>
+          <VisualizerContent isMobile={isMobile} />
+        </Suspense>
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0D0D0D] via-[#1a1a2e] to-[#0D0D0D]" />
+      )}
     </div>
   );
 }

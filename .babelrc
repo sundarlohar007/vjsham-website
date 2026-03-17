@@ -8,6 +8,8 @@
           "safari": "14",
           "edge": "80"
         },
+        "bugfixes": true,
+        "shippedProposals": true,
         "modules": false
       }
     }]

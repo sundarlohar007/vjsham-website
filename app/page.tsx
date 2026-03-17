@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import dynamic from 'next/dynamic';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import ControlPanel from '@/components/controller/ControlPanel';
 import Navigation from '@/components/layout/Navigation';
 import Footer from '@/components/layout/Footer';
+
+const Visualizer = lazy(() => import('@/components/visualizer/Visualizer'));
 
 function StaticBackground() {
   return (
@@ -15,14 +16,22 @@ function StaticBackground() {
   );
 }
 
-const Visualizer = dynamic(() => import('@/components/visualizer/Visualizer'), {
-  ssr: false,
-  loading: () => <StaticBackground />,
-});
+function CSSAnimatedBackground() {
+  return (
+    <div 
+      className="absolute inset-0 -z-10"
+      style={{
+        background: 'linear-gradient(-45deg, #0D0D0D, #1a1a2e, #16213e, #0f3460, #1a1a2e, #0D0D0D)',
+        backgroundSize: '400% 400%',
+        animation: 'gradientBG 15s ease infinite',
+      }}
+    />
+  );
+}
 
 export default function Home() {
-  const [showVisualizer, setShowVisualizer] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [showVisualizer, setShowVisualizer] = useState(false);
   const hasLoadedRef = useRef(false);
 
   useEffect(() => {
@@ -37,37 +46,21 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (hasLoadedRef.current) return;
+    if (isMobile || hasLoadedRef.current) return;
     
-    const loadVisualizer = () => {
+    const handleLoad = () => {
       if (hasLoadedRef.current) return;
       hasLoadedRef.current = true;
-      
-      setTimeout(() => {
-        setShowVisualizer(true);
-      }, 100);
+      setShowVisualizer(true);
     };
 
-    const handleInteraction = () => {
-      loadVisualizer();
-    };
+    if (document.readyState === 'complete') {
+      handleLoad();
+    } else {
+      window.addEventListener('load', handleLoad);
+    }
 
-    window.addEventListener('scroll', handleInteraction, { once: true });
-    window.addEventListener('click', handleInteraction, { once: true });
-    window.addEventListener('touchstart', handleInteraction, { once: true });
-    window.addEventListener('mousemove', handleInteraction, { once: true });
-
-    const fallbackTimer = setTimeout(() => {
-      loadVisualizer();
-    }, isMobile ? 5000 : 3000);
-
-    return () => {
-      window.removeEventListener('scroll', handleInteraction);
-      window.removeEventListener('click', handleInteraction);
-      window.removeEventListener('touchstart', handleInteraction);
-      window.removeEventListener('mousemove', handleInteraction);
-      clearTimeout(fallbackTimer);
-    };
+    return () => window.removeEventListener('load', handleLoad);
   }, [isMobile]);
 
   return (
@@ -75,8 +68,12 @@ export default function Home() {
       <Navigation />
       
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden pb-24 md:pb-0">
-        {showVisualizer ? (
-          <Visualizer />
+        {isMobile ? (
+          <CSSAnimatedBackground />
+        ) : showVisualizer ? (
+          <Suspense fallback={<StaticBackground />}>
+            <Visualizer />
+          </Suspense>
         ) : (
           <StaticBackground />
         )}
@@ -104,6 +101,14 @@ export default function Home() {
       <ControlPanel />
       
       <Footer />
+      
+      <style jsx global>{`
+        @keyframes gradientBG {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+      `}</style>
     </main>
   );
 }
