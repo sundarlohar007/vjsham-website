@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import ControlPanel from '@/components/controller/ControlPanel';
 import Navigation from '@/components/layout/Navigation';
@@ -12,6 +13,24 @@ const Visualizer = dynamic(() => import('@/components/visualizer/Visualizer'), {
   ),
 });
 
+function DelayedVisualizer() {
+  const [showVisualizer, setShowVisualizer] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowVisualizer(true);
+    }, 1500); // Delay loading by 1.5 seconds to prioritize LCP
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!showVisualizer) {
+    return <div className="absolute inset-0 bg-[#0D0D0D]" />;
+  }
+
+  return <Visualizer />;
+}
+
 export default function Home() {
   return (
     <main className="min-h-screen">
@@ -20,7 +39,7 @@ export default function Home() {
       {/* Hero Section - Above the fold - Critical for LCP */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden pb-24 md:pb-0">
         {/* Visualizer Background - Loaded after hero content */}
-        <Visualizer />
+        <DelayedVisualizer />
         
         {/* Hero Content - Rendered immediately for LCP */}
         <div className="relative z-10 text-center px-4 pt-16" style={{ contain: 'layout style paint' }}>

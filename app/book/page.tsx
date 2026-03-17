@@ -1,9 +1,12 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import Navigation from '@/components/layout/Navigation';
 import Footer from '@/components/layout/Footer';
-import { createClient } from '@supabase/supabase-js';
+
+const NavigationLazy = dynamic(() => import('@/components/layout/Navigation'));
+const FooterLazy = dynamic(() => import('@/components/layout/Footer'));
 
 const eventTypes = [
   "Club Night",
@@ -27,13 +30,8 @@ const budgets = [
 ];
 
 export default function BookPage() {
-  const supabase = useMemo(() => {
-    if (typeof window === 'undefined') return null;
-    return createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-    );
-  }, []);
+  const [supabase, setSupabase] = useState<any>(null);
+  const [supabaseLoading, setSupabaseLoading] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -84,6 +82,25 @@ export default function BookPage() {
       return;
     }
     
+    // Lazy load Supabase on submit
+    if (!supabase) {
+      setSupabaseLoading(true);
+      try {
+        const { createClient } = await import('@supabase/supabase-js');
+        const client = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+        );
+        setSupabase(client);
+      } catch {
+        setSubmitStatus('error');
+        setIsSubmitting(false);
+        setSupabaseLoading(false);
+        return;
+      }
+      setSupabaseLoading(false);
+    }
+    
     if (!supabase) {
       setSubmitStatus('error');
       setIsSubmitting(false);
@@ -120,7 +137,7 @@ export default function BookPage() {
   
   return (
     <main className="min-h-screen bg-background">
-      <Navigation />
+      <NavigationLazy />
       
       <section className="pt-32 pb-24 px-4 md:px-8">
         <div className="max-w-3xl mx-auto">
@@ -295,10 +312,10 @@ export default function BookPage() {
 
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || supabaseLoading}
               className="w-full py-4 bg-accent-primary text-background font-mono font-bold text-lg rounded-xl hover:bg-accent-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? (
+              {isSubmitting || supabaseLoading ? (
                 <span className="flex items-center justify-center gap-2">
                   <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -318,7 +335,7 @@ export default function BookPage() {
         </div>
       </section>
       
-      <Footer />
+      <FooterLazy />
     </main>
   );
 }
