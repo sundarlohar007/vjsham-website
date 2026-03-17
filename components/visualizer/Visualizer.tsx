@@ -1,12 +1,11 @@
 'use client';
 
-import { useRef, useMemo, useEffect } from 'react';
+import { useRef, useMemo, useEffect, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { EffectComposer, Bloom, Noise, ChromaticAberration } from '@react-three/postprocessing';
 import { BlendFunction } from 'postprocessing';
 import * as THREE from 'three';
 import { useVisualizerStore } from '@/lib/store';
-import { randomRange } from '@/lib/utils';
 
 const vertexShader = `
   varying vec2 vUv;
@@ -36,7 +35,6 @@ const fragmentShader = `
   varying vec2 vUv;
   varying vec3 vPosition;
   
-  // Simplex noise functions
   vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
   vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
   vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
@@ -111,43 +109,35 @@ const fragmentShader = `
     vec2 uv = vUv;
     float time = uTime * uSpeed;
     
-    // Glitch effect
     if (uGlitch) {
       float glitchStrength = sin(time * 50.0) * 0.1;
       uv.x += glitchStrength * step(0.95, sin(time * 10.0));
     }
     
-    // Zoom effect
     vec2 center = vec2(0.5);
     float zoomFactor = 0.5 + uZoom * 1.5;
     uv = center + (uv - center) / zoomFactor;
     
-    // Flash effect
     float flash = uFlash ? sin(time * 30.0) * 0.5 + 0.5 : 0.0;
     
-    // Base color from hue
     vec3 baseColor = hsl2rgb(vec3(uHue, 0.7, 0.5));
     
-    // Generate noise
     float noise1 = snoise(vec3(uv * (2.0 + uDensity * 8.0), time * 0.5));
     float noise2 = snoise(vec3(uv * (4.0 + uDensity * 8.0), time * 0.3 + 100.0));
     float noise3 = snoise(vec3(uv * (1.0 + uDensity * 4.0), time * 0.7 + 200.0));
     
-    // Distortion
     vec2 distortedUv = uv;
     if (uDistortion > 0.0) {
       distortedUv.x += sin(uv.y * 10.0 + time) * uDistortion * 0.2;
       distortedUv.y += cos(uv.x * 10.0 + time) * uDistortion * 0.2;
     }
     
-    // Mix different noise patterns based on fxMix
     float mixedNoise = mix(
       mix(noise1, noise2, uFxMix),
       noise3,
       0.5
     );
     
-    // Color mixing
     vec3 color1 = baseColor;
     vec3 color2 = hsl2rgb(vec3(mod(uHue + 0.33, 1.0), 0.6, 0.4));
     vec3 color3 = hsl2rgb(vec3(mod(uHue + 0.66, 1.0), 0.5, 0.6));
@@ -155,39 +145,32 @@ const fragmentShader = `
     vec3 finalColor = mix(color1, color2, mixedNoise * 0.5 + 0.5);
     finalColor = mix(finalColor, color3, noise2 * 0.3);
     
-    // Add noise texture
     finalColor += (noise1 * uNoise - uNoise * 0.5);
     
-    // Intensity and contrast
     finalColor = pow(finalColor, vec3(1.0 - uIntensity * 0.3));
     finalColor *= uIntensity * 1.5;
     
-    // Add flash
     finalColor += flash * vec3(1.0);
     
-    // Vignette
     float vignette = 1.0 - length(vUv - 0.5) * 0.8;
     finalColor *= vignette;
     
-    // Clamp final color
     finalColor = clamp(finalColor, 0.0, 1.0);
     
     gl_FragColor = vec4(finalColor, 1.0);
   }
 `;
 
-function Particles() {
+function Particles({ count }: { count: number }) {
   const meshRef = useRef<THREE.Points>(null);
   const { hue, density, zoom, speed, intensity } = useVisualizerStore();
   
-  const particleCount = Math.floor(500 + density * 3000);
-  
   const [positions, colors, sizes] = useMemo(() => {
-    const pos = new Float32Array(particleCount * 3);
-    const col = new Float32Array(particleCount * 3);
-    const siz = new Float32Array(particleCount);
+    const pos = new Float32Array(count * 3);
+    const col = new Float32Array(count * 3);
+    const siz = new Float32Array(count);
     
-    for (let i = 0; i < particleCount; i++) {
+    for (let i = 0; i < count; i++) {
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
       const r = 1 + Math.random() * zoom * 3;
@@ -206,13 +189,13 @@ function Particles() {
     }
     
     return [pos, col, siz];
-  }, [particleCount, hue, zoom]);
+  }, [count, hue, zoom]);
   
   useFrame((state) => {
     if (meshRef.current) {
       const positions = meshRef.current.geometry.attributes.position.array as Float32Array;
       
-      for (let i = 0; i < particleCount; i++) {
+      for (let i = 0; i < count; i++) {
         const i3 = i * 3;
         const x = positions[i3];
         const y = positions[i3 + 1];
@@ -291,7 +274,7 @@ function FluidPlane() {
   
   return (
     <mesh ref={meshRef} scale={5}>
-      <planeGeometry args={[2, 2, 128, 128]} />
+      <planeGeometry args={[2, 2, 64, 64]} />
       <shaderMaterial
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
@@ -303,40 +286,56 @@ function FluidPlane() {
   );
 }
 
-function Scene() {
-  const { glitch, flash, intensity } = useVisualizerStore();
+function Scene({ isMobile }: { isMobile: boolean }) {
+  const { intensity } = useVisualizerStore();
   
   return (
     <>
       <color attach="background" args={['#0D0D0D']} />
       <ambientLight intensity={0.5} />
       <FluidPlane />
-      <Particles />
+      <Particles count={isMobile ? 500 : 2000} />
       
-      <EffectComposer>
-        <Bloom
-          intensity={intensity * 0.5}
-          luminanceThreshold={0.2}
-          luminanceSmoothing={0.9}
-        />
-        <Noise opacity={0.1} blendFunction={BlendFunction.OVERLAY} />
-        <ChromaticAberration
-          offset={new THREE.Vector2(0.002 * intensity, 0.002 * intensity)}
-        />
-      </EffectComposer>
+      {!isMobile && (
+        <EffectComposer>
+          <Bloom
+            intensity={intensity * 0.5}
+            luminanceThreshold={0.2}
+            luminanceSmoothing={0.9}
+          />
+          <Noise opacity={0.1} blendFunction={BlendFunction.OVERLAY} />
+          <ChromaticAberration
+            offset={new THREE.Vector2(0.002 * intensity, 0.002 * intensity)}
+          />
+        </EffectComposer>
+      )}
     </>
   );
 }
 
 export default function Visualizer() {
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
   return (
     <div className="fixed inset-0 w-full h-full -z-10">
       <Canvas
         camera={{ position: [0, 0, 2], fov: 75 }}
-        gl={{ antialias: true, alpha: false }}
-        dpr={[1, 2]}
+        gl={{ antialias: !isMobile, alpha: false }}
+        dpr={isMobile ? 1 : [1, 2]}
+        performance={{ min: 0.5 }}
       >
-        <Scene />
+        <Scene isMobile={isMobile} />
       </Canvas>
     </div>
   );
