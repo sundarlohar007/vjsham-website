@@ -8,7 +8,7 @@ import Footer from '@/components/layout/Footer';
 const Visualizer = dynamic(() => import('@/components/visualizer/Visualizer'), {
   ssr: false,
   loading: () => (
-    <div className="absolute inset-0 bg-background" />
+    <div className="absolute inset-0 bg-[#0D0D0D]" />
   ),
 });
 
@@ -17,13 +17,13 @@ export default function Home() {
     <main className="min-h-screen">
       <Navigation />
       
-      {/* Hero Section - Above the fold */}
+      {/* Hero Section - Above the fold - Critical for LCP */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden pb-24 md:pb-0">
-        {/* Visualizer Background */}
+        {/* Visualizer Background - Loaded after hero content */}
         <Visualizer />
         
-        {/* Hero Content */}
-        <div className="relative z-10 text-center px-4 pt-16">
+        {/* Hero Content - Rendered immediately for LCP */}
+        <div className="relative z-10 text-center px-4 pt-16" style={{ contain: 'layout style paint' }}>
           <h1 className="font-mono text-3xl sm:text-4xl md:text-6xl lg:text-8xl font-bold tracking-wider mb-3 md:mb-4">
             <span className="text-foreground">VJ</span>
             <span className="text-accent-primary">SHAM</span>
@@ -40,7 +40,7 @@ export default function Home() {
         </div>
       </section>
       
-      {/* Control Panel */}
+      {/* Control Panel - Below fold */}
       <ControlPanel />
       
       <Footer />
