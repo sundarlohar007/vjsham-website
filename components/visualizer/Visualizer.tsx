@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useMemo, useEffect, useState, Suspense } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { EffectComposer, Bloom, Noise, ChromaticAberration } from '@react-three/postprocessing';
 import { BlendFunction } from 'postprocessing';
 import * as THREE from 'three';
@@ -30,7 +30,6 @@ const fragmentShader = `
   uniform float uFxMix;
   uniform bool uGlitch;
   uniform bool uFlash;
-  uniform vec2 uResolution;
   
   varying vec2 vUv;
   varying vec3 vPosition;
@@ -163,7 +162,7 @@ const fragmentShader = `
 
 function Particles({ count }: { count: number }) {
   const meshRef = useRef<THREE.Points>(null);
-  const { hue, density, zoom, speed, intensity } = useVisualizerStore();
+  const { hue, zoom, speed, intensity } = useVisualizerStore();
   
   const [positions, colors] = useMemo(() => {
     const pos = new Float32Array(count * 3);
@@ -227,7 +226,7 @@ function Particles({ count }: { count: number }) {
   );
 }
 
-function FluidPlane() {
+function FluidPlane({ segments }: { segments: number }) {
   const meshRef = useRef<THREE.Mesh>(null);
   const { hue, distortion, speed, intensity, noise, fxMix } = useVisualizerStore();
   
@@ -243,7 +242,6 @@ function FluidPlane() {
     uFxMix: { value: 0.5 },
     uGlitch: { value: false },
     uFlash: { value: false },
-    uResolution: { value: new THREE.Vector2(1, 1) },
   }), []);
   
   useFrame((state) => {
@@ -263,7 +261,7 @@ function FluidPlane() {
   
   return (
     <mesh ref={meshRef} scale={5}>
-      <planeGeometry args={[2, 2, 32, 32]} />
+      <planeGeometry args={[2, 2, segments, segments]} />
       <shaderMaterial
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
@@ -282,8 +280,8 @@ function Scene({ isMobile }: { isMobile: boolean }) {
     <>
       <color attach="background" args={['#0D0D0D']} />
       <ambientLight intensity={0.5} />
-      <FluidPlane />
-      <Particles count={isMobile ? 300 : 1500} />
+      <FluidPlane segments={isMobile ? 8 : 32} />
+      <Particles count={isMobile ? 75 : 1500} />
       
       {!isMobile && (
         <EffectComposer>
@@ -300,7 +298,11 @@ function VisualizerContent({ isMobile }: { isMobile: boolean }) {
   return (
     <Canvas
       camera={{ position: [0, 0, 2], fov: 75 }}
-      gl={{ antialias: !isMobile, alpha: false }}
+      gl={{ 
+        antialias: !isMobile, 
+        alpha: false,
+        powerPreference: isMobile ? 'low-power' : 'high-performance',
+      }}
       dpr={isMobile ? 1 : [1, 1.5]}
       performance={{ min: 0.5 }}
     >
@@ -309,9 +311,9 @@ function VisualizerContent({ isMobile }: { isMobile: boolean }) {
   );
 }
 
-export default function Visualizer() {
-  const [isReady, setIsReady] = useState(false);
+export default function Visualizer({ isLoaded }: { isLoaded?: boolean }) {
   const [isMobile, setIsMobile] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
   
   useEffect(() => {
     const checkMobile = () => {
@@ -325,25 +327,23 @@ export default function Visualizer() {
   }, []);
   
   useEffect(() => {
-    const handleLoad = () => {
-      setIsReady(true);
+    const initWhenIdle = () => {
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => setShouldRender(true), { timeout: 3000 });
+      } else {
+        setTimeout(() => setShouldRender(true), 3000);
+      }
     };
     
-    if (document.readyState === 'complete') {
-      setIsReady(true);
-    } else {
-      window.addEventListener('load', handleLoad);
+    if (isLoaded) {
+      initWhenIdle();
     }
-    
-    return () => window.removeEventListener('load', handleLoad);
-  }, []);
+  }, [isLoaded]);
   
   return (
     <div className="fixed inset-0 w-full h-full -z-10">
-      {isReady ? (
-        <Suspense fallback={<div className="absolute inset-0 bg-[#0D0D0D]" />}>
-          <VisualizerContent isMobile={isMobile} />
-        </Suspense>
+      {shouldRender ? (
+        <VisualizerContent isMobile={isMobile} />
       ) : (
         <div className="absolute inset-0 bg-gradient-to-br from-[#0D0D0D] via-[#1a1a2e] to-[#0D0D0D]" />
       )}

@@ -16,42 +16,16 @@ function StaticBackground() {
   );
 }
 
-function CSSAnimatedBackground() {
-  return (
-    <div 
-      className="absolute inset-0 -z-10"
-      style={{
-        background: 'linear-gradient(-45deg, #0D0D0D, #1a1a2e, #16213e, #0f3460, #1a1a2e, #0D0D0D)',
-        backgroundSize: '400% 400%',
-        animation: 'gradientBG 15s ease infinite',
-      }}
-    />
-  );
-}
-
 export default function Home() {
-  const [isMobile, setIsMobile] = useState(false);
-  const [showVisualizer, setShowVisualizer] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
   const hasLoadedRef = useRef(false);
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+    if (hasLoadedRef.current) return;
+    hasLoadedRef.current = true;
 
-  useEffect(() => {
-    if (isMobile || hasLoadedRef.current) return;
-    
     const handleLoad = () => {
-      if (hasLoadedRef.current) return;
-      hasLoadedRef.current = true;
-      setShowVisualizer(true);
+      setIsLoaded(true);
     };
 
     if (document.readyState === 'complete') {
@@ -61,22 +35,16 @@ export default function Home() {
     }
 
     return () => window.removeEventListener('load', handleLoad);
-  }, [isMobile]);
+  }, []);
 
   return (
     <main className="min-h-screen">
       <Navigation />
       
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden pb-24 md:pb-0">
-        {isMobile ? (
-          <CSSAnimatedBackground />
-        ) : showVisualizer ? (
-          <Suspense fallback={<StaticBackground />}>
-            <Visualizer />
-          </Suspense>
-        ) : (
-          <StaticBackground />
-        )}
+        <Suspense fallback={<StaticBackground />}>
+          <Visualizer isLoaded={isLoaded} />
+        </Suspense>
         
         <div 
           className="relative z-10 text-center px-4 pt-16" 
@@ -101,14 +69,6 @@ export default function Home() {
       <ControlPanel />
       
       <Footer />
-      
-      <style jsx global>{`
-        @keyframes gradientBG {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-      `}</style>
     </main>
   );
 }

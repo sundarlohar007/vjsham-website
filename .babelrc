@@ -10,7 +10,12 @@
         },
         "bugfixes": true,
         "shippedProposals": true,
-        "modules": false
+        "modules": false,
+        "exclude": [
+          "transform-async-to-generator",
+          "transform-regenerator",
+          "transform-for-of"
+        ]
       }
     }]
   ]
