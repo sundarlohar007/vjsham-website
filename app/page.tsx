@@ -41,13 +41,13 @@ export default function Home() {
     <main className="min-h-screen">
       <Navigation />
       
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pb-24 md:pb-0">
+      <section className="relative min-h-[150vh] md:min-h-screen flex items-start md:items-center justify-center overflow-hidden pt-24 md:pt-0 pb-32 md:pb-0">
         <Suspense fallback={<StaticBackground />}>
           <Visualizer isLoaded={isLoaded} />
         </Suspense>
         
         <div 
-          className="relative z-10 text-center px-4 pt-16" 
+          className="relative z-[60] text-center px-4 pt-4" 
           style={{ contain: 'layout style paint' }}
         >
           <h1 className="font-mono text-3xl sm:text-4xl md:text-6xl lg:text-8xl font-bold tracking-wider mb-3 md:mb-4">
